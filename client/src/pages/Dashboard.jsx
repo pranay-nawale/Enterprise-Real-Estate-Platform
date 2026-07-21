@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useParams, useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import AdminSidebar from '../components/AdminSidebar';
+import ImageInput from '../components/ImageInput';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../config';
 
 // Schema configurations for CRUD sections
 const SCHEMAS = {
   hero: {
     title: 'Hero Section',
-    api: 'http://localhost:5000/api/hero',
+    api: `${API_BASE}/api/hero`,
     fields: [
       { name: 'title', label: 'Title', type: 'text', required: true },
       { name: 'subtitle', label: 'Subtitle', type: 'text', required: true },
       { name: 'description', label: 'Description', type: 'textarea', required: true },
-      { name: 'imageUrl', label: 'Image URL', type: 'text', required: true },
+      { name: 'imageUrl', label: 'Image', type: 'image', required: true },
       { name: 'buttonText', label: 'Button Text', type: 'text', required: true }
     ],
     columns: [
@@ -23,11 +26,11 @@ const SCHEMAS = {
   },
   about: {
     title: 'About Project',
-    api: 'http://localhost:5000/api/about',
+    api: `${API_BASE}/api/about`,
     fields: [
       { name: 'title', label: 'Title', type: 'text', required: true },
       { name: 'description', label: 'Description', type: 'textarea', required: true },
-      { name: 'imageUrl', label: 'Image URL', type: 'text', required: true }
+      { name: 'imageUrl', label: 'Image', type: 'image', required: true }
     ],
     columns: [
       { key: 'title', label: 'Title' },
@@ -36,7 +39,7 @@ const SCHEMAS = {
   },
   services: {
     title: 'Services',
-    api: 'http://localhost:5000/api/services',
+    api: `${API_BASE}/api/services`,
     fields: [
       { name: 'title', label: 'Title', type: 'text', required: true },
       { name: 'description', label: 'Description', type: 'textarea', required: true }
@@ -48,7 +51,7 @@ const SCHEMAS = {
   },
   properties: {
     title: 'Properties / Floor Plans',
-    api: 'http://localhost:5000/api/properties',
+    api: `${API_BASE}/api/properties`,
     fields: [
       { name: 'propertyName', label: 'Property Name', type: 'text', required: true },
       { name: 'location', label: 'Location', type: 'text', required: true },
@@ -57,7 +60,7 @@ const SCHEMAS = {
       { name: 'bathrooms', label: 'Bathrooms', type: 'number', required: true },
       { name: 'area', label: 'Area (e.g. 450 sq.ft)', type: 'text', required: true },
       { name: 'description', label: 'Description', type: 'textarea', required: true },
-      { name: 'imageUrl', label: 'Image URL', type: 'text', required: true }
+      { name: 'imageUrl', label: 'Image', type: 'image', required: true }
     ],
     columns: [
       { key: 'propertyName', label: 'Name' },
@@ -68,44 +71,20 @@ const SCHEMAS = {
   },
   projects: {
     title: 'Projects / Gallery',
-    api: 'http://localhost:5000/api/projects',
+    api: `${API_BASE}/api/projects`,
     fields: [
       { name: 'projectName', label: 'Project Name', type: 'text', required: true },
       { name: 'description', label: 'Description', type: 'textarea', required: true },
-      { name: 'imageUrl', label: 'Image URL', type: 'text', required: true }
+      { name: 'imageUrl', label: 'Image', type: 'image', required: true }
     ],
     columns: [
       { key: 'projectName', label: 'Project Name' },
       { key: 'description', label: 'Description' }
     ]
   },
-  testimonials: {
-    title: 'Testimonials',
-    api: 'http://localhost:5000/api/testimonials',
-    fields: [
-      { name: 'name', label: 'Client Name', type: 'text', required: true },
-      { name: 'review', label: 'Review Text', type: 'textarea', required: true }
-    ],
-    columns: [
-      { key: 'name', label: 'Name' },
-      { key: 'review', label: 'Review' }
-    ]
-  },
-  faq: {
-    title: 'FAQ',
-    api: 'http://localhost:5000/api/faq',
-    fields: [
-      { name: 'question', label: 'Question', type: 'text', required: true },
-      { name: 'answer', label: 'Answer', type: 'textarea', required: true }
-    ],
-    columns: [
-      { key: 'question', label: 'Question' },
-      { key: 'answer', label: 'Answer' }
-    ]
-  },
   contact: {
     title: 'Contact Details',
-    api: 'http://localhost:5000/api/contact',
+    api: `${API_BASE}/api/contact`,
     fields: [
       { name: 'address', label: 'Address', type: 'textarea', required: true },
       { name: 'phone', label: 'Phone', type: 'text', required: true },
@@ -136,6 +115,7 @@ function Dashboard() {
 function DashboardContent() {
   const { section } = useParams();
   const navigate = useNavigate();
+  const { token, logout } = useAuth();
   const isCustomSection = section === 'inquiries';
 
   const schema = SCHEMAS[section];
@@ -148,16 +128,24 @@ function DashboardContent() {
   const [formData, setFormData] = useState({});
   const [submitError, setSubmitError] = useState('');
 
-  // Fetch list data
+  // Auth headers for write operations
+  const authHeaders = () => ({
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  // Fetch list data (inquiries require auth; other sections are public)
   const loadData = async () => {
     setLoading(true);
     try {
       const apiEndpoint = isCustomSection 
-        ? 'http://localhost:5000/api/inquiries' 
+        ? `${API_BASE}/api/inquiries` 
         : schema?.api;
         
       if (!apiEndpoint) return;
-      const res = await axios.get(apiEndpoint);
+      // GET /api/inquiries is protected — pass auth token
+      const res = isCustomSection
+        ? await axios.get(apiEndpoint, authHeaders())
+        : await axios.get(apiEndpoint);
       setData(res.data);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -196,12 +184,13 @@ function DashboardContent() {
     if (!window.confirm('Are you sure you want to delete this record?')) return;
     try {
       const apiEndpoint = isCustomSection 
-        ? `http://localhost:5000/api/inquiries/${id}` 
+        ? `${API_BASE}/api/inquiries/${id}` 
         : `${schema.api}/${id}`;
         
-      await axios.delete(apiEndpoint);
+      await axios.delete(apiEndpoint, authHeaders());
       loadData();
     } catch (err) {
+      if (err.response?.status === 401) { logout(); return; }
       alert('Error deleting record: ' + err.message);
     }
   };
@@ -219,14 +208,15 @@ function DashboardContent() {
     try {
       if (editItem) {
         // PUT update
-        await axios.put(`${schema.api}/${editItem._id}`, formData);
+        await axios.put(`${schema.api}/${editItem._id}`, formData, authHeaders());
       } else {
         // POST create
-        await axios.post(schema.api, formData);
+        await axios.post(schema.api, formData, authHeaders());
       }
       setFormOpen(false);
       loadData();
     } catch (err) {
+      if (err.response?.status === 401) { logout(); return; }
       setSubmitError(err.response?.data?.message || 'Error processing request.');
     }
   };
@@ -262,6 +252,7 @@ function DashboardContent() {
                 <th className="p-4 border-r border-primary-light/20">Email</th>
                 <th className="p-4 border-r border-primary-light/20">Phone</th>
                 <th className="p-4 border-r border-primary-light/20">Message</th>
+                <th className="p-4 border-r border-primary-light/20">Date</th>
                 <th className="p-4">Actions</th>
               </tr>
             </thead>
@@ -273,6 +264,9 @@ function DashboardContent() {
                     <td className="p-4 border-r border-accent/10">{item.email}</td>
                     <td className="p-4 border-r border-accent/10">{item.phone}</td>
                     <td className="p-4 border-r border-accent/10 font-light leading-relaxed max-w-md break-all">{item.message}</td>
+                    <td className="p-4 border-r border-accent/10 whitespace-nowrap">
+                      {item.createdAt ? new Date(item.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                    </td>
                     <td className="p-4">
                       <button
                         onClick={() => handleDelete(item._id)}
@@ -285,7 +279,7 @@ function DashboardContent() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-primary/50 italic">
+                  <td colSpan={6} className="p-8 text-center text-primary/50 italic">
                     No client inquiries have been received yet.
                   </td>
                 </tr>
@@ -334,7 +328,15 @@ function DashboardContent() {
                 <label className="block text-[10px] uppercase font-bold tracking-wider text-primary/70 mb-1">
                   {field.label} {field.required && '*'}
                 </label>
-                {field.type === 'textarea' ? (
+                {field.type === 'image' ? (
+                  <ImageInput
+                    name={field.name}
+                    value={formData[field.name] || ''}
+                    onChange={handleFormChange}
+                    token={token}
+                    required={field.required}
+                  />
+                ) : field.type === 'textarea' ? (
                   <textarea
                     name={field.name}
                     required={field.required}
@@ -392,11 +394,20 @@ function DashboardContent() {
                   <tr key={item._id} className="hover:bg-beige-light/40 transition-colors text-primary">
                     {schema.columns.map((col) => {
                       const val = item[col.key];
-                      const isImage = typeof val === 'string' && (val.startsWith('http') || val.includes('.jpg') || val.includes('.png'));
+                      const isImage = typeof val === 'string' && (
+                        val.startsWith('http') ||
+                        val.startsWith('/uploads/') ||
+                        val.includes('.jpg') ||
+                        val.includes('.png') ||
+                        val.includes('.webp')
+                      );
+                      const imgSrc = typeof val === 'string' && val.startsWith('/uploads/')
+                        ? `${API_BASE}${val}`
+                        : val;
                       return (
                         <td key={col.key} className="p-4 border-r border-accent/10 max-w-sm truncate">
                           {isImage ? (
-                            <img src={val} alt="preview" className="h-10 w-16 object-cover border border-accent/20" />
+                            <img src={imgSrc} alt="preview" className="h-10 w-16 object-cover border border-accent/20" />
                           ) : (
                             String(val || '')
                           )}

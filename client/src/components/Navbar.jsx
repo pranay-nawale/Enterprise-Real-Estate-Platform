@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function Navbar({ onEnquireClick }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -74,18 +74,12 @@ function Navbar({ onEnquireClick }) {
                 {item.label}
               </button>
             ))}
-            <Link
-              to="/admin"
-              className="text-accent hover:text-white transition-colors duration-200 text-xs font-medium uppercase tracking-wider border border-accent/40 px-2 py-1 rounded"
-            >
-              CMS Admin
-            </Link>
           </div>
 
           {/* CTA Button */}
           <div className="hidden lg:block">
             <button
-              onClick={onEnquireClick}
+              onClick={() => handleNavClick('contact')}
               className="bg-primary hover:bg-primary-light text-beige border border-accent/30 px-6 py-2.5 text-xs font-semibold uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-lg"
             >
               ENQUIRE NOW
@@ -94,12 +88,6 @@ function Navbar({ onEnquireClick }) {
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center space-x-4">
-            <Link
-              to="/admin"
-              className="text-accent hover:text-white text-xs font-medium uppercase border border-accent/40 px-2 py-1 rounded"
-            >
-              CMS
-            </Link>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-beige hover:text-white hover:bg-primary-light/35 focus:outline-none"
@@ -156,7 +144,7 @@ function Navbar({ onEnquireClick }) {
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);
-                onEnquireClick();
+                handleNavClick('contact');
               }}
               className="w-full bg-primary hover:bg-primary-light text-beige py-3 text-center text-xs font-bold uppercase tracking-widest rounded-md"
             >

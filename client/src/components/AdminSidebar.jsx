@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function AdminSidebar() {
   const location = useLocation();
   const currentTab = location.pathname.split('/').pop() || '';
+  const { logout, adminUser } = useAuth();
 
   const menuItems = [
     { label: 'Hero Section', path: 'hero' },
@@ -11,8 +13,6 @@ function AdminSidebar() {
     { label: 'Services', path: 'services' },
     { label: 'Properties / Floor Plans', path: 'properties' },
     { label: 'Projects / Gallery', path: 'projects' },
-    { label: 'Testimonials', path: 'testimonials' },
-    { label: 'FAQ', path: 'faq' },
     { label: 'Contact Details', path: 'contact' },
     { label: 'Customer Inquiries', path: 'inquiries' }
   ];
@@ -35,6 +35,16 @@ function AdminSidebar() {
         </Link>
       </div>
 
+      {/* Logged in as */}
+      {adminUser && (
+        <div className="px-4 py-3 border-b border-accent/10 flex items-center space-x-2">
+          <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
+          <span className="text-[10px] text-white/40 uppercase tracking-widest truncate">
+            {adminUser}
+          </span>
+        </div>
+      )}
+
       {/* Menu Links */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {menuItems.map((item, idx) => {
@@ -55,9 +65,19 @@ function AdminSidebar() {
         })}
       </nav>
 
-      {/* Footer info */}
-      <div className="p-4 border-t border-accent/15 text-center text-[9px] text-beige-dark/40 uppercase tracking-widest">
-        MERN CMS v1.0.0
+      {/* Logout + Footer */}
+      <div className="p-4 border-t border-accent/15 space-y-3">
+        <button
+          id="admin-logout-btn"
+          onClick={logout}
+          className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-sm border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-400/50 transition-all duration-200 text-[10px] font-bold uppercase tracking-widest"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Logout</span>
+        </button>
+        <p className="text-center text-[9px] text-beige-dark/30 uppercase tracking-widest">MERN CMS v1.0.0</p>
       </div>
     </div>
   );

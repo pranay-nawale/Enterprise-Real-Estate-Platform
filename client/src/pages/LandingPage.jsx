@@ -3,6 +3,13 @@ import axios from 'axios';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import InquiryModal from '../components/InquiryModal';
+import { API_BASE } from '../config';
+
+// Resolve /uploads/ paths to full server URLs; external URLs pass through unchanged
+const resolveImg = (url) =>
+  url && url.startsWith('/uploads/')
+    ? `${API_BASE}${url}`
+    : url;
 
 function LandingPage() {
   const [hero, setHero] = useState(null);
@@ -10,14 +17,11 @@ function LandingPage() {
   const [services, setServices] = useState([]);
   const [properties, setProperties] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [testimonials, setTestimonials] = useState([]);
-  const [faqs, setFaqs] = useState([]);
   const [contact, setContact] = useState(null);
   
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
-  const [faqActive, setFaqActive] = useState({});
 
   // Inquiry form states
   const [inquiryData, setInquiryData] = useState({
@@ -37,18 +41,14 @@ function LandingPage() {
           servicesRes,
           propertiesRes,
           projectsRes,
-          testimonialsRes,
-          faqsRes,
           contactRes
         ] = await Promise.all([
-          axios.get('http://localhost:5000/api/hero'),
-          axios.get('http://localhost:5000/api/about'),
-          axios.get('http://localhost:5000/api/services'),
-          axios.get('http://localhost:5000/api/properties'),
-          axios.get('http://localhost:5000/api/projects'),
-          axios.get('http://localhost:5000/api/testimonials'),
-          axios.get('http://localhost:5000/api/faq'),
-          axios.get('http://localhost:5000/api/contact')
+          axios.get(`${API_BASE}/api/hero`),
+          axios.get(`${API_BASE}/api/about`),
+          axios.get(`${API_BASE}/api/services`),
+          axios.get(`${API_BASE}/api/properties`),
+          axios.get(`${API_BASE}/api/projects`),
+          axios.get(`${API_BASE}/api/contact`)
         ]);
 
         setHero(heroRes.data[0] || null);
@@ -56,8 +56,6 @@ function LandingPage() {
         setServices(servicesRes.data);
         setProperties(propertiesRes.data);
         setProjects(projectsRes.data);
-        setTestimonials(testimonialsRes.data);
-        setFaqs(faqsRes.data);
         setContact(contactRes.data[0] || null);
       } catch (error) {
         console.error('Error fetching CMS data:', error);
@@ -76,7 +74,7 @@ function LandingPage() {
     e.preventDefault();
     setInquiryStatus({ loading: true, success: false, error: '' });
     try {
-      await axios.post('http://localhost:5000/api/inquiries', inquiryData);
+      await axios.post(`${API_BASE}/api/inquiries`, inquiryData);
       setInquiryStatus({ loading: false, success: true, error: '' });
       setInquiryData({ name: '', email: '', phone: '', message: '' });
       setTimeout(() => {
@@ -89,10 +87,6 @@ function LandingPage() {
         error: err.response?.data?.message || 'Failed to submit inquiry. Please try again.'
       });
     }
-  };
-
-  const toggleFaq = (id) => {
-    setFaqActive(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   if (loading) {
@@ -130,7 +124,7 @@ function LandingPage() {
       <section
         id="home"
         className="relative h-screen bg-cover bg-center flex items-center justify-start text-white pt-20"
-        style={{ backgroundImage: `linear-gradient(to right, rgba(29, 22, 19, 0.85) 40%, rgba(29, 22, 19, 0.4) 100%), url(${activeHero.imageUrl})` }}
+        style={{ backgroundImage: `linear-gradient(to right, rgba(29, 22, 19, 0.85) 40%, rgba(29, 22, 19, 0.4) 100%), url(${resolveImg(activeHero.imageUrl)})` }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-xl flex flex-col space-y-6">
@@ -238,7 +232,7 @@ function LandingPage() {
 
               <div className="h-full min-h-[300px] border border-accent/20 bg-white/50 flex flex-col items-center justify-center p-6 text-center shadow-sm relative overflow-hidden">
                 <img
-                  src={activeAbout.imageUrl}
+                  src={resolveImg(activeAbout.imageUrl)}
                   alt="Building"
                   className="absolute inset-0 w-full h-full object-cover opacity-80"
                 />
@@ -343,7 +337,7 @@ function LandingPage() {
                   className="group relative h-72 rounded-sm overflow-hidden border border-accent/20 shadow-md hover:shadow-xl transition-all duration-300"
                 >
                   <img
-                    src={proj.imageUrl}
+                    src={resolveImg(proj.imageUrl)}
                     alt={proj.projectName}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
@@ -405,23 +399,6 @@ function LandingPage() {
               </div>
             ))}
           </div>
-
-          {/* Services from CMS */}
-          {services.length > 0 && (
-            <div className="mt-20 pt-16 border-t border-accent/20">
-              <div className="text-center max-w-2xl mx-auto mb-12">
-                <h3 className="text-primary text-2xl font-bold tracking-tight">CMS Managed Services</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {services.map((service) => (
-                  <div key={service._id} className="bg-beige-light p-6 border-t-4 border-primary rounded-sm shadow-sm">
-                    <h4 className="text-primary font-bold text-sm uppercase tracking-wider mb-2">{service.title}</h4>
-                    <p className="text-primary/70 text-xs font-light leading-relaxed">{service.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
@@ -470,8 +447,7 @@ function LandingPage() {
                   <th className="p-4 border-r border-primary-light/20">Unit Type</th>
                   <th className="p-4 border-r border-primary-light/20">Carpet Area</th>
                   <th className="p-4 border-r border-primary-light/20">Balcony</th>
-                  <th className="p-4 border-r border-primary-light/20">Total Area</th>
-                  <th className="p-4">Action</th>
+                  <th className="p-4">Total Area</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-accent/15">
@@ -484,15 +460,7 @@ function LandingPage() {
                     <td className="p-4 border-r border-accent/10">
                       {prop.bedrooms > 0 ? `${prop.bedrooms * 45} sq.ft` : '45 sq.ft'}
                     </td>
-                    <td className="p-4 border-r border-accent/10">{prop.area}</td>
-                    <td className="p-4">
-                      <button
-                        onClick={() => setSelectedProperty(prop)}
-                        className="text-accent hover:text-primary font-bold uppercase tracking-wider"
-                      >
-                        View Layout
-                      </button>
-                    </td>
+                    <td className="p-4">{prop.area}</td>
                   </tr>
                 ))}
               </tbody>
@@ -516,7 +484,7 @@ function LandingPage() {
                   
                   {/* Floor Plan Illustration Box */}
                   <div className="h-64 border border-accent/20 bg-white relative flex flex-col items-center justify-center p-4 overflow-hidden mb-4">
-                    <img src={prop.imageUrl} alt="Floor Plan" className="w-full h-full object-cover opacity-90 hover:scale-102 transition-transform duration-300" />
+                    <img src={resolveImg(prop.imageUrl)} alt="Floor Plan" className="w-full h-full object-cover opacity-90 hover:scale-102 transition-transform duration-300" />
                     <div className="absolute bottom-3 right-3 bg-primary/95 text-white text-[9px] uppercase tracking-widest px-2 py-1 border border-accent/30 font-semibold shadow-md">
                       Price: {prop.price}
                     </div>
@@ -556,82 +524,6 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* 9. TESTIMONIALS SECTION */}
-      <section id="testimonials" className="py-24 bg-beige">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <span className="text-accent text-xs font-bold tracking-widest uppercase">
-              TESTIMONIALS
-            </span>
-            <h2 className="text-primary text-3xl sm:text-4xl font-extrabold tracking-tight">
-              What Our Buyers Say
-            </h2>
-            <p className="text-primary/70 text-xs font-light">
-              Real reviews from real home buyers at Chembur who trusted Swastik Group for their future legacy.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.length > 0 ? (
-              testimonials.map((test) => (
-                <div
-                  key={test._id}
-                  className="bg-white p-8 border border-accent/20 rounded-sm shadow-sm flex flex-col justify-between space-y-4"
-                >
-                  <p className="text-primary/80 text-xs font-light italic leading-relaxed">
-                    "{test.review}"
-                  </p>
-                  <div>
-                    <h5 className="text-primary text-xs uppercase tracking-widest font-bold border-t border-accent/20 pt-4 mt-2">
-                      {test.name}
-                    </h5>
-                    <span className="text-accent text-[9px] uppercase tracking-wider font-bold">Verified Buyer</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center text-xs text-primary/60">
-                No testimonials available.
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 10. FAQ SECTION */}
-      <section id="faq" className="py-24 bg-beige-light border-y border-accent/15">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="text-center mb-16 space-y-3">
-            <span className="text-accent text-xs font-bold tracking-widest uppercase">
-              FAQ
-            </span>
-            <h2 className="text-primary text-3xl font-extrabold tracking-tight">
-              Frequently Asked Questions
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq) => (
-              <div key={faq._id} className="bg-white border border-accent/25 rounded-sm overflow-hidden shadow-sm">
-                <button
-                  onClick={() => toggleFaq(faq._id)}
-                  className="w-full text-left px-6 py-4 flex justify-between items-center text-primary font-bold uppercase tracking-wider text-xs focus:outline-none"
-                >
-                  <span>{faq.question}</span>
-                  <span className="text-accent font-extrabold text-base">
-                    {faqActive[faq._id] ? '−' : '+'}
-                  </span>
-                </button>
-                {faqActive[faq._id] && (
-                  <div className="px-6 pb-4 text-xs font-light leading-relaxed text-primary/80 border-t border-accent/10 pt-3 bg-beige-light/30">
-                    {faq.answer}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* 11. DEVELOPER SECTION */}
       <section id="developer" className="py-24 bg-white">
@@ -776,7 +668,7 @@ function LandingPage() {
                     required
                     value={inquiryData.name}
                     onChange={handleInquiryChange}
-                    placeholder="Anish Sharma"
+                    placeholder="Rahul Mehta"
                     className="w-full bg-beige-light border border-accent/25 px-4 py-2.5 text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
@@ -788,7 +680,7 @@ function LandingPage() {
                     required
                     value={inquiryData.email}
                     onChange={handleInquiryChange}
-                    placeholder="anish@example.com"
+                    placeholder="rahul.mehta@example.com"
                     className="w-full bg-beige-light border border-accent/25 px-4 py-2.5 text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
@@ -815,7 +707,7 @@ function LandingPage() {
                   rows={4}
                   value={inquiryData.message}
                   onChange={handleInquiryChange}
-                  placeholder="I am interested in scheduling a site visit for 2 BHK Alto..."
+                  placeholder="I would like to know more about this project. Please contact me."
                   className="w-full bg-beige-light border border-accent/25 px-4 py-2.5 text-xs focus:outline-none focus:border-primary resize-none"
                 ></textarea>
               </div>

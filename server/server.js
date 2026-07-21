@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./config/db');
 const apiRoutes = require('./routes/api');
 const Hero = require('./models/Hero');
@@ -10,6 +11,9 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded images as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api', apiRoutes);
@@ -31,8 +35,6 @@ const autoSeed = async () => {
       const Service = require('./models/Service');
       const Property = require('./models/Property');
       const Project = require('./models/Project');
-      const Testimonial = require('./models/Testimonial');
-      const Faq = require('./models/Faq');
       const Contact = require('./models/Contact');
 
       // Seed Hero
@@ -130,41 +132,7 @@ const autoSeed = async () => {
         }
       ]);
 
-      // Seed Testimonials
-      await Testimonial.create([
-        {
-          name: "Anish Sharma",
-          review: "Buying our home at One Chembur was the best decision. The connectivity is unmatched, and the building construction quality is top-notch. Swastik Group delivered exactly what was promised."
-        },
-        {
-          name: "Pranay Mehta",
-          review: "The layout of the 2 BHK Alto is extremely efficient. Every corner of the flat feels spacious. The amenities like the indoor gym and kids play area make it a perfect family home."
-        },
-        {
-          name: "Sneha Patel",
-          review: "A truly premium living experience. Chembur is so well connected, and Swastik Group's legacy of trust shines through in their service and transparency."
-        }
-      ]);
 
-      // Seed FAQ
-      await Faq.create([
-        {
-          question: "What are the flat configurations available?",
-          answer: "We offer 1 RK Classic, 1 BHK Grand, and 2 BHK Alto residences with carpet areas starting from 285 sq.ft up to 585 sq.ft."
-        },
-        {
-          question: "Is the project MahaRERA registered?",
-          answer: "Yes, the project is registered with MahaRERA under registration number PR1180002502829. All legal documentation is clear."
-        },
-        {
-          question: "What amenities are provided in the building?",
-          answer: "The building includes a fully equipped Gymnasium, Indoor Games Area, Yoga & Meditation Deck, Senior Citizen Seating Area, Walkway Track, Ample Multi-level Parking, and 24/7 CCTV Security."
-        },
-        {
-          question: "How is the connectivity from Subhash Nagar, Chembur?",
-          answer: "It is exceptionally well connected: Chembur Railway Station is just 5 minutes away, Eastern Freeway is 7 minutes, BKC is 15 minutes, and the Airport is 25 minutes."
-        }
-      ]);
 
       // Seed Contact
       await Contact.create({

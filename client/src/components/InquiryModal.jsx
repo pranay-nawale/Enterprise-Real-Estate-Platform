@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE } from '../config';
 
 function InquiryModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    message: 'I am interested in Codename One Chembur. Please share more details.'
+    message: 'I would like to know more about this project. Please contact me.'
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -23,7 +24,7 @@ function InquiryModal({ isOpen, onClose }) {
     setLoading(true);
     setError('');
     try {
-      await axios.post('http://localhost:5000/api/inquiries', formData);
+      await axios.post(`${API_BASE}/api/inquiries`, formData);
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -31,7 +32,7 @@ function InquiryModal({ isOpen, onClose }) {
           name: '',
           email: '',
           phone: '',
-          message: 'I am interested in Codename One Chembur. Please share more details.'
+          message: 'I would like to know more about this project. Please contact me.'
         });
         onClose();
       }, 2500);
@@ -96,7 +97,7 @@ function InquiryModal({ isOpen, onClose }) {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="e.g. Anish Sharma"
+                placeholder="e.g. Rahul Mehta"
                 className="w-full bg-beige-light border border-accent/20 px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
               />
             </div>
@@ -111,7 +112,7 @@ function InquiryModal({ isOpen, onClose }) {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="e.g. anish@example.com"
+                placeholder="e.g. rahul.mehta@example.com"
                 className="w-full bg-beige-light border border-accent/20 px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
               />
             </div>

@@ -34,3 +34,7 @@ coverage/
 
 # Miscellaneous
 .tmp/
+
+# Uploaded images — keep directory but ignore binary content
+server/uploads/*
+!server/uploads/.gitkeep
