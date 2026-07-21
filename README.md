@@ -105,7 +105,5 @@ The public website's design is inspired by high-end residential listings, utiliz
   - Services list
   - Properties (Floor Plans)
   - Projects (Gallery)
-  - Testimonials
-  - FAQ list
   - Contact Details
 - **Customer Inquiries**: Inquiries submitted on the landing page form are stored in the database and can be reviewed or deleted directly from this panel.
